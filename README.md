@@ -1,3 +1,6 @@
+This is a fork of D. Duvenaud's original code with some modifications to make it run under a current python 3 environment (the original code used python 2). 
+
+
 Neural Graph Fingerprints
 =============
 
