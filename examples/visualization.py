@@ -101,6 +101,7 @@ def train_nn(pred_fun, loss_fun, num_weights, train_smiles, train_raw_targets, t
                                             train_smiles, train_targets)
 
     num_iters = train_params['num_epochs'] * len(train_smiles) / train_params['batch_size']
+    num_iters = int(num_iters)
     trained_weights = adam(grad_fun_with_data, init_weights, callback=callback,
                            num_iters=num_iters, step_size=train_params['learn_rate'],
                            b1=train_params['b1'], b2=train_params['b2'])
@@ -238,10 +239,10 @@ def plot(trained_weights):
 if __name__ == '__main__':
     # Training.  Only need to run this part if we haven't yet saved results.pkl
     trained_network_weights = train_neural_fingerprint()
-    with open('results.pkl', 'w') as f:
+    with open('results.pkl', 'bw') as f:
         pickle.dump(trained_network_weights, f)
 
     # Plotting.
-    with open('results.pkl') as f:
+    with open('results.pkl', 'br') as f:
         trained_weights = pickle.load(f)
     plot(trained_weights)
