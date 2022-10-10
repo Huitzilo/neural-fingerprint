@@ -126,8 +126,8 @@ def dropout(weights, fraction, random_state):
 def get_ith_minibatch_ixs(i, num_datapoints, batch_size):
     num_minibatches = num_datapoints / batch_size + ((num_datapoints % batch_size) > 0)
     i = i % num_minibatches
-    start = i * batch_size
-    stop = start + batch_size
+    start = int(i * batch_size)
+    stop = int(start + batch_size)
     return slice(start, stop)
 
 def build_batched_grad(grad, batch_size, inputs, targets):
