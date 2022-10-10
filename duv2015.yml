@@ -160,3 +160,4 @@ dependencies:
     - sqlalchemy==1.4.41
     - tornado==6.2
     - unicodedata2==14.0.0
+prefix: /Users/ms16aay/mambaforge/envs/duv2015
