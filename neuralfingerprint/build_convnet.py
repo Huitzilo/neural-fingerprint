@@ -1,10 +1,10 @@
 import autograd.numpy as np
 from autograd.scipy.misc import logsumexp
 
-from features import num_atom_features, num_bond_features
-from util import memoize, WeightsParser
-from mol_graph import graph_from_smiles_tuple, degrees
-from build_vanilla_net import build_fingerprint_deep_net, relu, batch_normalize
+from .features import num_atom_features, num_bond_features
+from .util import memoize, WeightsParser
+from .mol_graph import graph_from_smiles_tuple, degrees
+from .build_vanilla_net import build_fingerprint_deep_net, relu, batch_normalize
 
 
 def fast_array_from_list(xs):
@@ -48,7 +48,7 @@ def build_convnet_fingerprint_fun(num_hidden_features=[100, 100], fp_length=512,
         parser.add_weights(('layer output weights', layer), (all_layer_sizes[layer], fp_length))
         parser.add_weights(('layer output bias', layer),    (1, fp_length))
 
-    in_and_out_sizes = zip(all_layer_sizes[:-1], all_layer_sizes[1:])
+    in_and_out_sizes = list(zip(all_layer_sizes[:-1], all_layer_sizes[1:]))
     for layer, (N_prev, N_cur) in enumerate(in_and_out_sizes):
         parser.add_weights(("layer", layer, "biases"), (1, N_cur))
         parser.add_weights(("layer", layer, "self filter"), (N_prev, N_cur))
@@ -88,7 +88,7 @@ def build_convnet_fingerprint_fun(num_hidden_features=[100, 100], fp_length=512,
             all_layer_fps.append(layer_output)
 
         num_layers = len(num_hidden_features)
-        for layer in xrange(num_layers):
+        for layer in range(num_layers):
             write_to_fingerprint(atom_features, layer)
             atom_features = update_layer(weights, layer, atom_features, bond_features, array_rep,
                                          normalize=normalize)

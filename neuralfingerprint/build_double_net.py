@@ -1,14 +1,14 @@
-from util import memoize, WeightsParser
-from rdkit_utils import smiles_to_fps
-from build_convnet import build_convnet_fingerprint_fun
-from build_vanilla_net import build_fingerprint_deep_net
+from .util import memoize, WeightsParser
+from .rdkit_utils import smiles_to_fps
+from .build_convnet import build_convnet_fingerprint_fun
+from .build_vanilla_net import build_fingerprint_deep_net
 
 import autograd.numpy as np
 
 def build_double_morgan_fingerprint_fun(fp_length=512, fp_radius=4):
 
     def fingerprints_from_smiles(weights, smiles_tuple):
-        smiles1, smiles2 = zip(*smiles_tuple)
+        smiles1, smiles2 = list(zip(*smiles_tuple))
         # Morgan fingerprints don't use weights.
         fp_array_1 = fingerprints_from_smiles_tuple(tuple(smiles1))
         fp_array_2 = fingerprints_from_smiles_tuple(tuple(smiles2))
@@ -33,10 +33,10 @@ def build_double_convnet_fingerprint_fun(**kwargs):
     fp_fun2, parser2 = build_convnet_fingerprint_fun(**kwargs)
 
     def double_fingerprint_fun(weights, smiles_tuple):
-        smiles1, smiles2 = zip(*smiles_tuple)
+        smiles1, smiles2 = list(zip(*smiles_tuple))
         fp1 = fp_fun1(weights, smiles1)
         fp2 = fp_fun2(weights, smiles2)
-        return zip(fp1, fp2)
+        return list(zip(fp1, fp2))
 
     combined_parser = WeightsParser()
     combined_parser.add_weights('weights1', len(parser1))

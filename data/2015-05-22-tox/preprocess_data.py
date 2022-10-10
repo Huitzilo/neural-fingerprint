@@ -20,7 +20,7 @@ def slicedict(d, ixs):
     return newd
 
 def randomize_order(data):
-    N = len(data.values()[0])
+    N = len(list(data.values())[0])
     rand_ix = np.arange(N)
     np.random.seed(1)
     np.random.shuffle(rand_ix)
@@ -46,22 +46,22 @@ filenames = ['nr-ahr.smiles', 'nr-ar.smiles', 'sr-mmp.smiles']
 #filenames = ['tiny.smiles']
 
 for infilename in filenames:
-    print "Processing", infilename
+    print("Processing", infilename)
     outfilename = infilename + '-processed.csv'
     removed_outfilename = infilename + '-excluded_molecules.csv'
     pandas_data = pd.io.parsers.read_csv(infilename, sep='\t')
 
     fields = ['smiles', 'inchi_key', 'target']
 
-    print "Loading raw file..."
+    print("Loading raw file...")
     data = {field: np.array(pandas_data[field]) for field in fields}
     data = randomize_order(data)
 
-    print "Computing molecule graphs from SMILES..."
-    mols = map(Chem.MolFromSmiles, data['smiles'])
+    print("Computing molecule graphs from SMILES...")
+    mols = list(map(Chem.MolFromSmiles, data['smiles']))
     N_mols_original = len(mols)
     bad_mol_ixs = np.array([x is None or maximum_degree_in_molecule(x) >= 5 for x in mols])
-    print "{0} molecules couldn't be parsed.".format(np.sum(bad_mol_ixs))
+    print("{0} molecules couldn't be parsed.".format(np.sum(bad_mol_ixs)))
 
     def make_fun_run_only_on_good(fun):
         def new_fun(mol):
@@ -71,41 +71,41 @@ for infilename in filenames:
                 return np.NaN
         return new_fun
 
-    print "Computing RDKit features on each molecule..."
-    for feature_name, fun in rdkit_functions.iteritems():
-        print "Computing", feature_name, "..."
-        data[feature_name] = np.array(map(make_fun_run_only_on_good(fun), mols))
+    print("Computing RDKit features on each molecule...")
+    for feature_name, fun in rdkit_functions.items():
+        print("Computing", feature_name, "...")
+        data[feature_name] = np.array(list(map(make_fun_run_only_on_good(fun), mols)))
 
-    print "Identifying duplicates...",
+    print("Identifying duplicates...", end=' ')
     all_inchis = {}
     duplicated_mols = []
-    is_dup = [False] * len(data.values()[0])
+    is_dup = [False] * len(list(data.values())[0])
     for i, inchi in enumerate(data['inchi_key']):
         if inchi in all_inchis:
             is_dup[i] = True
         all_inchis[inchi] = True
-    print np.sum(is_dup), "found."
+    print(np.sum(is_dup), "found.")
 
-    print "Identifying bad values...",
-    is_finite = [True] * len(data.values()[0])
-    for names, vals in data.iteritems():
+    print("Identifying bad values...", end=' ')
+    is_finite = [True] * len(list(data.values())[0])
+    for names, vals in data.items():
         if names in ['inchi_key', 'smiles']:
             continue  # Not-numeric so don't worry
         is_finite = np.logical_and(is_finite, np.isfinite(vals))
-    print np.sum(np.logical_not(is_finite)), " found."
+    print(np.sum(np.logical_not(is_finite)), " found.")
 
     good_ixs = is_finite & np.logical_not(is_dup) & np.logical_not(bad_mol_ixs)
     good_data = slicedict(data, good_ixs)
     bad_data = slicedict(data, np.logical_not(good_ixs))
-    print "Datapoints thrown away:", np.sum(np.logical_not(good_ixs))
-    print "Datapoints kept:", np.sum(good_ixs)
+    print("Datapoints thrown away:", np.sum(np.logical_not(good_ixs)))
+    print("Datapoints kept:", np.sum(good_ixs))
 
-    print "Writing output to file..."
+    print("Writing output to file...")
     pd.DataFrame(good_data).to_csv(outfilename, sep=',', header=True, index=False)
     pd.DataFrame(bad_data).to_csv(removed_outfilename, sep=',', header=True, index=False)
 
-    print "Making histograms of all features..."
-    for name, vals in good_data.iteritems():
+    print("Making histograms of all features...")
+    for name, vals in good_data.items():
         if name in ['inchi_key', 'smiles']:
             continue  # Not-numeric so don't worry
         fig = plt.figure()

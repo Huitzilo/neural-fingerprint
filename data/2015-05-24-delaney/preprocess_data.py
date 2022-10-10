@@ -17,7 +17,7 @@ def slicedict(d, ixs):
     return newd
 
 def randomize_order(data):
-    N = len(data.values()[0])
+    N = len(list(data.values())[0])
     rand_ix = np.arange(N)
     np.random.seed(1)
     np.random.shuffle(rand_ix)
@@ -42,16 +42,16 @@ rdkit_functions = {'Molecular Weight' : Descriptors.MolWt,
                    'Number of Rotatable Bonds' : rdMolDescriptors.CalcNumRotatableBonds,
                    'Minimum Degree' : minimum_degree_in_molecule}
 
-print "Loading raw file..."
+print("Loading raw file...")
 data = {field: np.array(pandas_data[field]) for field in fields}
 data = randomize_order(data)
 
-print "Computing molecule graphs from SMILES..."
-mols = map(Chem.MolFromSmiles, data['smiles'])
-print "Computing RDKit features on each molecule..."
-for feature_name, fun in rdkit_functions.iteritems():
-    print "Computing", feature_name, "..."
-    data[feature_name] = np.array(map(fun, mols))
+print("Computing molecule graphs from SMILES...")
+mols = list(map(Chem.MolFromSmiles, data['smiles']))
+print("Computing RDKit features on each molecule...")
+for feature_name, fun in rdkit_functions.items():
+    print("Computing", feature_name, "...")
+    data[feature_name] = np.array(list(map(fun, mols)))
 
 #transforms = [( 'rate', lambda x: np.log(np.maximum(x, 1e-25)), 'Log Rate'),
 #              ( 'strength', lambda x: np.log(np.maximum(x, 1e-10)), 'Log Strength')]
@@ -61,22 +61,22 @@ for feature_name, fun in rdkit_functions.iteritems():
 #    print "Transforming", feature_name, "..."
 #    data[transformed_name] = np.array(map(fun, data[feature_name]))
 
-print "Identifying duplicates...",
+print("Identifying duplicates...", end=' ')
 all_inchis = {}
 duplicated_mols = []
-is_dup = [False] * len(data.values()[0])
+is_dup = [False] * len(list(data.values())[0])
 for i, inchi in enumerate(data['smiles']):
     if inchi in all_inchis:
         is_dup[i] = True
     all_inchis[inchi] = True
-print np.sum(is_dup), "found."
+print(np.sum(is_dup), "found.")
 
-print "Identifying bad values...",
-is_finite = [True] * len(data.values()[0])
-for name, vals in data.iteritems():
+print("Identifying bad values...", end=' ')
+is_finite = [True] * len(list(data.values())[0])
+for name, vals in data.items():
     if name == 'measured log solubility in mols per litre':
         is_finite = np.logical_and(is_finite, np.isfinite(vals))
-print np.sum(np.logical_not(is_finite)), " found."
+print(np.sum(np.logical_not(is_finite)), " found.")
 
 #print "Finding molecules with atoms having 0 degree...",
 #degree_zero = data['Minimum Degree'] == 0
@@ -85,15 +85,15 @@ print np.sum(np.logical_not(is_finite)), " found."
 good_ixs = is_finite & np.logical_not(is_dup) # & np.logical_not(degree_zero)
 good_data = slicedict(data, good_ixs)
 bad_data = slicedict(data, np.logical_not(good_ixs))
-print "Datapoints thrown away:", np.sum(np.logical_not(good_ixs))
-print "Datapoints kept:", np.sum(good_ixs)
+print("Datapoints thrown away:", np.sum(np.logical_not(good_ixs)))
+print("Datapoints kept:", np.sum(good_ixs))
 
-print "Writing output to file..."
+print("Writing output to file...")
 pd.DataFrame(good_data).to_csv(outfilename, sep=',', header=True, index=False)
 pd.DataFrame(bad_data).to_csv(removed_outfilename, sep=',', header=True, index=False)
 
-print "Making histograms of all features..."
-for name, vals in data.iteritems():
+print("Making histograms of all features...")
+for name, vals in data.items():
     if name in ['Compound ID', 'smiles']:
         continue  # Not-numeric so don't worry
     fig = plt.figure()

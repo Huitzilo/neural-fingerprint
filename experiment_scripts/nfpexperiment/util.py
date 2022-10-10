@@ -17,11 +17,11 @@ def load_json(json_file):
         return None
 
 def get_losses(loss_name):
-    return map(lambda x : x[loss_name], jobs_data)
+    return [x[loss_name] for x in jobs_data]
 
 def get_hypers(hyper_name):
-    return map(lambda x : x['varied_params'][hyper_name], jobs_data)
+    return [x['varied_params'][hyper_name] for x in jobs_data]
 
 
 def get_jobs_data(data_file_names):
-    return filter(bool, map(load_json, data_file_names))
+    return list(filter(bool, list(map(load_json, data_file_names))))

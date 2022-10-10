@@ -1,7 +1,7 @@
 import autograd.numpy as np
 
-from util import memoize, WeightsParser
-from rdkit_utils import smiles_to_fps
+from .util import memoize, WeightsParser
+from .rdkit_utils import smiles_to_fps
 
 
 def batch_normalize(activations):

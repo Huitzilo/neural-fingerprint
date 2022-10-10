@@ -19,11 +19,11 @@ from rdkit import Chem
 from rdkit.Chem import rdMolDescriptors
 
 N_dpts = 3 * 10**4
-slicedict = lambda d, ixs : {k : v[ixs] for k, v in d.iteritems()}
+slicedict = lambda d, ixs : {k : v[ixs] for k, v in d.items()}
 
 def randomize_order(data):
-    data = {k : np.array(v) for k, v in data.iteritems()} # To array for fancy indexing
-    N = len(data.values()[0])
+    data = {k : np.array(v) for k, v in data.items()} # To array for fancy indexing
+    N = len(list(data.values())[0])
     rand_ix = np.arange(N)
     npr.RandomState(0).shuffle(rand_ix)
     return slicedict(data, rand_ix)
@@ -39,29 +39,27 @@ def csv_to_dict(fname, colnums, colnames, coltypes, header=False, **kwargs):
                 for colname, colnum, coltype in zip(colnames, colnums, coltypes):
                     data[colname].append(coltype(row[colnum]))
             except:
-                print "Couldn't parse row {0}".format(rownum)
+                print("Couldn't parse row {0}".format(rownum))
     return data
 
 def filter_on_other(predicate, test_values, return_values):
-    return map(lambda x : x[1],
-               filter(lambda x : predicate(test_values[x[0]]),
-                      enumerate(return_values)))
+    return [x[1] for x in [x for x in enumerate(return_values) if predicate(test_values[x[0]])]]
 
 def filter_dict(data, field, predicate):
     filter_vals = data[field]
     return {k : filter_on_other(predicate, filter_vals, v)
-            for k, v in data.iteritems()}
+            for k, v in data.items()}
 
 def has_valid_shape(data):
     valid = True
-    colnames = data.keys()
+    colnames = list(data.keys())
     N = len(data[colnames[0]])
     for name in colnames[1:]:
         valid = valid and (len(data[name]) == N)
     return valid
 
 def dict_to_csv(data, fname):
-    colnames = data.keys()
+    colnames = list(data.keys())
     with open(fname, 'w') as f:
         writer = csv.writer(f, delimiter=',', quotechar='\'')
         writer.writerow(colnames)
@@ -83,14 +81,14 @@ def valid_smiles(smile):
         smile_to_fp(smile, 1, 10)
         return True
     except:
-        print "Couldn't parse", smile
+        print("Couldn't parse", smile)
         return False
 
 def valid_PCE(pce):
     if -10.0 <= pce <= 100.0:
         return True
     else:
-        print "Invalid pce", pce
+        print("Invalid pce", pce)
         return False
 
 subprocess.call(["tar", "-zxvf", "data_cep.tar.gz", "--directory", "/tmp"])
@@ -103,7 +101,7 @@ assert not has_duplicates(data_subsample['smiles'])
 assert has_valid_shape(data_subsample)
 dict_to_csv(data_subsample, "cep-processed.csv")
 
-for name, vals in data.iteritems():
+for name, vals in data.items():
     if name in ['smiles']:
         continue  # Not-numeric so don't worry
     fig = plt.figure()

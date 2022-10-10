@@ -6,19 +6,19 @@ import nfpexperiment.util as util
 import numpy as np
 
 def get_losses(loss_name):
-    return map(lambda x : x[loss_name], jobs_data)
+    return [x[loss_name] for x in jobs_data]
 
 def get_hypers(hyper_name):
-    return map(lambda x : x['varied_params'][hyper_name], jobs_data)
+    return [x['varied_params'][hyper_name] for x in jobs_data]
 
 jobs_data = util.get_jobs_data(sys.argv[1:])
 
 loss_types = ['train_loss', 'test_loss', 'halfway_train_loss']
 color_list = ['RoyalBlue', 'DarkOliveGreen', 'DarkOrange',
               'MidnightBlue', 'DarkSlateGray', 'Red', 'Brown']
-colors = dict(zip(loss_types, color_list))
+colors = dict(list(zip(loss_types, color_list)))
 
-hyper_names = jobs_data[0]['varied_params'].keys()
+hyper_names = list(jobs_data[0]['varied_params'].keys())
 N_hypers = len(hyper_names)
 fig = plt.figure(figsize=(3 * (N_hypers + 1), 3))
 

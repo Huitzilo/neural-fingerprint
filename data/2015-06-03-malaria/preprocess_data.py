@@ -26,7 +26,7 @@ assert not has_duplicates(data_subsample['smiles'])
 assert has_valid_shape(data_subsample)
 dict_to_csv(data_subsample, "malaria-processed.csv")
 
-for name, vals in data.iteritems():
+for name, vals in data.items():
     if name in ['smiles']:
         continue  # Not-numeric so don't worry
     fig = plt.figure()

@@ -71,9 +71,9 @@ model_bounds = dict(mean = morgan_bounds,
 
 def generate_params(bounds, N_jobs):
     rs = npr.RandomState(0)
-    for jobnum in xrange(N_jobs):
+    for jobnum in range(N_jobs):
         yield jobnum, {param_name : rs.uniform(*param_bounds)
-                       for param_name, param_bounds in bounds.iteritems()}
+                       for param_name, param_bounds in bounds.items()}
 
 def outputfile(jobnum, dataset, model, fold):
     debug_text = '_DEBUG' if __debug__ else ''
@@ -105,8 +105,8 @@ def build_params_string(jobnum, varied_params, dataset, model, train_slices, tes
     return json.dumps(params)
 
 def runjob_debug(params_string, outfile):
-    print params_string
-    print outfile
+    print(params_string)
+    print(outfile)
 
 def runjob_local(params_string, outfile):
     with open(outfile, 'w') as f:
@@ -128,33 +128,33 @@ def runjob_sbatch(params_string, outfile):
         raise RuntimeError
 
 def generate_slice_lists(num_folds, N_data):
-    chunk_boundaries = map(int, np.linspace(0, N_data, num_folds + 1))
-    chunk_slices = zip(chunk_boundaries[0:-1], chunk_boundaries[1:])
+    chunk_boundaries = list(map(int, np.linspace(0, N_data, num_folds + 1)))
+    chunk_slices = list(zip(chunk_boundaries[0:-1], chunk_boundaries[1:]))
 
     for f_ix in range(num_folds):
         validation_chunk_ixs = [f_ix]
         test_chunk_ixs = [(f_ix + 1) % num_folds]
         train_chunk_ixs = [i for i in range(num_folds) if i not in validation_chunk_ixs + test_chunk_ixs]
-        yield (map(chunk_slices.__getitem__, train_chunk_ixs),
-               map(chunk_slices.__getitem__, validation_chunk_ixs),
-               map(chunk_slices.__getitem__, test_chunk_ixs))
+        yield (list(map(chunk_slices.__getitem__, train_chunk_ixs)),
+               list(map(chunk_slices.__getitem__, validation_chunk_ixs)),
+               list(map(chunk_slices.__getitem__, test_chunk_ixs)))
 
 extract_test_loss = lambda job_data : job_data['test_loss']
 
 if not test_mode:
-    print "Starting validation experiments..."
+    print("Starting validation experiments...")
     all_jobs = []
     still_running = lambda job : job.poll() is None
     for dataset, num_data in zip(datasets, dataset_sizes):
         for fold, (train_slices, validation_slices, test_slices)\
                 in enumerate(generate_slice_lists(num_folds, num_data)):
-            for model, bounds in model_bounds.iteritems():
+            for model, bounds in model_bounds.items():
                 for jobnum, varied_params in generate_params(bounds, N_jobs):
-                    print "\nRunning fold {} job {} on dataset {} with model {} " \
-                          "and params {}".format(fold, jobnum, dataset, model, varied_params)
+                    print("\nRunning fold {} job {} on dataset {} with model {} " \
+                          "and params {}".format(fold, jobnum, dataset, model, varied_params))
                     cur_outfile = outputfile(jobnum, dataset, model, fold)
                     if os.path.exists(cur_outfile) and os.path.getsize(cur_outfile) > 0:
-                        print "SKIPPING because it's already done."
+                        print("SKIPPING because it's already done.")
                         continue
                     params_string = build_params_string(jobnum, varied_params, dataset, model,
                                                         train_slices, validation_slices, fold)
@@ -167,9 +167,9 @@ if not test_mode:
                         all_jobs.append(p)   # Only have a few jobs running at a time.
                         while len(all_jobs) >= N_cores:
                             sleep(1)
-                            all_jobs = filter(still_running, all_jobs)
+                            all_jobs = list(filter(still_running, all_jobs))
 else:
-    print "Starting test experiments..."
+    print("Starting test experiments...")
     all_jobs = []
     still_running = lambda job : job.poll() is None
     for dataset, num_data in zip(datasets, dataset_sizes):
@@ -178,13 +178,13 @@ else:
             for model in model_bounds:
                 cur_outfile = outputfile_test(dataset, model, fold)
                 if os.path.exists(cur_outfile) and os.path.getsize(cur_outfile) > 0:
-                    print "SKIPPING because it's already done."
+                    print("SKIPPING because it's already done.")
                     continue
 
                 all_outfiles = [outputfile(jobnum, dataset, model, fold) for jobnum in range(N_jobs)]
                 all_results = util.get_jobs_data(all_outfiles)
-                print "Loaded {} results for fold {} dataset {} model {}"\
-                    .format(len(all_results), fold, dataset, model)
+                print("Loaded {} results for fold {} dataset {} model {}"\
+                    .format(len(all_results), fold, dataset, model))
                 best_hypers = sorted(all_results, key=extract_test_loss)[0]['params']
                 best_hypers['seed'] = 0
                 best_hypers['task']['train_slices'] = train_slices + validation_slices
@@ -199,4 +199,4 @@ else:
                     all_jobs.append(p)   # Only have a few jobs running at a time.
                     while len(all_jobs) >= N_cores:
                         sleep(1)
-                        all_jobs = filter(still_running, all_jobs)
+                        all_jobs = list(filter(still_running, all_jobs))
